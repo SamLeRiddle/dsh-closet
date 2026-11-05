@@ -1,0 +1,6 @@
+- insert:
+    - id: closet
+      name: 'dsh-closet'
+      config:
+        # Host 将此前缀注入页面，界面读写同一个 <prefix>/api/config
+        routePrefix: /closet
