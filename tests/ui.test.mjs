@@ -24,9 +24,22 @@ function startUI({ baseURI = 'http://dsh.test/', clientConfig, rows = [] } = {})
   const listeners = {}
   let disposers = []
   let plugin
+  let currentHooks = null
   const React = {
     createElement(type, props, ...children) { return { type, props: props || {}, children } },
-    useState(value) { return [value, () => {}] },
+    useState(value) {
+      if (!currentHooks) return [value, () => {}]
+      const hooks = currentHooks
+      const index = hooks.cursor++
+      if (!(index in hooks.values)) hooks.values[index] = value
+      return [hooks.values[index], next => { hooks.values[index] = next }]
+    },
+    useRef(value) {
+      if (!currentHooks) return { current: value }
+      const index = currentHooks.cursor++
+      if (!(index in currentHooks.values)) currentHooks.values[index] = { current: value }
+      return currentHooks.values[index]
+    },
     useEffect() {},
   }
   const sidebarRow = label => ({
@@ -118,6 +131,20 @@ function startUI({ baseURI = 'http://dsh.test/', clientConfig, rows = [] } = {})
     posts: () => requests.filter(request => request.options.method === 'POST'),
     clickButton,
     addCloset: () => clickButton('＋ 新建一个匣'),
+    nameField(index = 0) {
+      const node = elements(settings()).filter(element =>
+        typeof element?.type === 'function' && typeof element.props.onCommit === 'function')[index]
+      assert.ok(node, 'Expected a registered name editor')
+      const hooks = { cursor: 0, values: [] }
+      return {
+        render() {
+          currentHooks = hooks
+          hooks.cursor = 0
+          try { return node.type(node.props) }
+          finally { currentHooks = null }
+        },
+      }
+    },
     toggle(id = 'c1') {
       const button = {
         querySelector(selector) {
@@ -260,6 +287,39 @@ test('keeps every configured member while the sidebar has not rendered yet', asy
   })
   await settle()
   assert.equal(ui.childCount(), 2, 'An empty sidebar is not evidence that the plugins disappeared')
+})
+
+test('Escape cancels an edited name before blur can save it, and later edits still save', async () => {
+  const ui = await loadedUI()
+  const field = ui.nameField()
+  let input = field.render()
+  input.props.onChange({ target: { value: '不应保存' } })
+  input = field.render()
+  assert.equal(input.props.value, '不应保存')
+  let prevented = false
+  let stopped = false
+  let blurred = false
+  input.props.onKeyDown({
+    key: 'Escape',
+    preventDefault() { prevented = true },
+    stopPropagation() { stopped = true },
+    currentTarget: { blur() { blurred = true; input.props.onBlur() } },
+  })
+  assert.equal(prevented, true)
+  assert.equal(stopped, true)
+  assert.equal(blurred, true)
+  assert.equal(ui.posts().length, 0, 'Escape must not enqueue a save from the stale blur handler')
+  input = field.render()
+  assert.equal(input.props.value, '匣')
+  input.props.onChange({ target: { value: '正常保存' } })
+  input = field.render()
+  input.props.onBlur()
+  assert.equal(ui.posts().length, 1)
+  const request = ui.posts()[0]
+  assert.equal(request.body().closets[0].name, '正常保存')
+  request.respond({ ok: true, config: request.body() })
+  await settle()
+  assert.match(textOf(ui.settings()), /已保存/)
 })
 
 for (const { name, baseURI, clientConfig, expected } of [
