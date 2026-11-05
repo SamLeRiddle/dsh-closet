@@ -26,6 +26,7 @@
     "locale/zh.json",
     "icon.svg",
     "README.md",
+    "docs/images/*.png",
     "tests/*.test.mjs"
   ],
   "keywords": [
