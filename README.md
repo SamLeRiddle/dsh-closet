@@ -1,51 +1,57 @@
-# dsh-closet — 匣
+# dsh-closet
 
-**English** | [简体中文](README.zh.md)
+Collapsible sidebar groups for DeepSeek Harness.
 
-Organize third-party entries in the DeepSeek Harness sidebar into collapsible groups.
+**English** · [简体中文](README.zh.md) · [Download v0.1.4](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4) · [Changelog](CHANGELOG.md)
 
-**Latest release: 0.1.4.** [Download and release notes](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4).
-
-![Expand or collapse groups while keeping access to the original plugin panels](docs/images/sidebar-overview.png)
-
-![Create groups, rename and reorder them, and assign entries through dropdowns](docs/images/settings-assignment.png)
-
-These feature illustrations use Chinese UI labels. The example groups are 常用 (Everyday), 开发 (Development), and 工具 (Tools).
+![Sidebar groups, collapsed and expanded](docs/images/sidebar-overview.en.png)
 
 ## Features
 
-- Create multiple groups and expand or collapse each one independently. Group headers show the number of currently available entries.
-- Open the original plugin panel from a grouped entry. The active entry is highlighted, with an activity indicator when its group is collapsed.
-- Keep grouped entries from appearing twice in the sidebar. The underlying plugins continue to work.
-- Follow sidebar changes when a third-party plugin is disabled or enabled. Entries return to their saved groups when they become available again.
-- Exclude official sidebar entries from the assignment list. Version 0.1.4 fixes their incorrect detection in the English host interface.
+- **Independent groups.** Create multiple groups and expand or collapse each one separately.
+- **Original plugin panels.** Open panels through their grouped entries, with active-entry highlighting and collapsed-group indicators.
+- **Flexible organization.** Rename and reorder groups, move entries between them, or return entries to the sidebar.
+- **Automatic updates.** Available entries and counts follow plugin enable/disable changes, while saved assignments are retained.
+- **Local persistence.** Changes save automatically. Failed saves preserve pending edits and offer a retry.
 
-## Installation and upgrades
+## Installation
 
-Download a ZIP or TGZ from the [release page](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4). The download links are in the release description.
+1. Download a ZIP or TGZ from the [release page](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4).
+2. Install the extracted `dsh-closet` directory or the TGZ as a local DSH bundle.
+3. Restart DSH as required by the host.
 
-- **ZIP:** extract the archive and install its `dsh-closet` directory as a local DSH bundle.
-- **TGZ:** install the archive through the plugin manager for your DSH environment.
+For Windows Desktop, use its bundled CLI or supported plugin manager with the `desktop` profile.
 
-For Windows Desktop, use its bundled CLI or the plugin manager available in your installed version, and select the `desktop` profile. Executable paths depend on your installation. Fully restart DSH when required by the host.
-
-Back up `<DSH_HOME>/config/dsh-closet.json` before upgrading. The configuration format remains version 1, so existing valid configurations need no migration. If an older version assigned official entries to a group, move them outside the group before upgrading. This release does not automatically remove existing records.
+Back up `<DSH_HOME>/config/dsh-closet.json` before upgrading. Existing valid configurations remain compatible. If an older version grouped official sidebar entries, return them to the sidebar before upgrading; existing records are not automatically removed.
 
 ## Configuration
 
-Open DSH settings and select **匣**. The plugin settings interface is currently in Chinese.
+Open DSH settings and select **匣**.
 
-- Create, rename, reorder, or delete groups. Deleting a group returns its members to the ungrouped sidebar.
-- Use the dropdown beside each entry to assign it to a group or return it to the ungrouped sidebar.
-- Newly discovered entries start outside all groups.
+1. Create groups and give them names that fit your workflow.
+2. Use each entry’s dropdown to choose its group or leave it ungrouped.
+3. Reorder groups with the arrow buttons. Deleting a group returns its members to the sidebar.
 
-Changes appear immediately and are saved locally to `<DSH_HOME>/config/dsh-closet.json`, defaulting to `~/.dsh/config/dsh-closet.json`. Saves run in sequence, and pending edits are combined into the latest configuration. Failed saves keep your current edits and offer a retry. Refreshing the page reloads the configuration from disk.
+![Group management and entry assignments](docs/images/settings-assignment.en.png)
 
-A default configuration is created only when the file is missing. Temporary read failures, including permission or file-access errors, are reported without moving or overwriting the original file. Invalid JSON is backed up before rebuilding the configuration. Existing `.broken` backups are kept, with later backups named `.broken.1` and so on. If the backup fails, the original file is preserved and the error is reported.
+Settings are saved to `<DSH_HOME>/config/dsh-closet.json`, defaulting to `~/.dsh/config/dsh-closet.json`. Saves are processed in order, with pending edits combined into the latest state.
 
-## API route prefix
+Temporary read failures leave the original configuration untouched. Invalid JSON is backed up before rebuilding, and existing `.broken` backups are preserved.
 
-The default prefix is `/closet`. Override it in your profile’s `cordis.patch.yml`:
+## Compatibility
+
+The runtime has been tested with Windows 11 and DSH Desktop **0.2.2-rc.1**. Version 0.1.4 fixes official sidebar entries being incorrectly listed for assignment in the English host interface.
+
+Current limitations:
+
+- The plugin settings UI is in Chinese; full English localization is not included.
+- Entries are identified by their labels. Identical labels cannot be distinguished reliably, and renamed or translated entries may need reassignment. Groups use separate IDs and may share names.
+- Menu entries and some entries using the host’s default icon are excluded from grouping.
+- The implementation depends on the host’s sidebar structure. DSH updates may require compatibility changes.
+
+## Advanced configuration
+
+To change the default `/closet` API prefix, add an override in your profile’s `cordis.patch.yml`:
 
 ```yaml
 - id: closet
@@ -53,31 +59,17 @@ The default prefix is `/closet`. Override it in your profile’s `cordis.patch.y
     routePrefix: /custom
 ```
 
-Restart DSH and refresh the page. Both the host and the client then use the same endpoint: `/custom/api/config` in this example. Nested paths such as `/tools/closet` are supported, as is `/`, which maps to `/api/config`.
+Restart DSH and refresh the page. The host and client will both use `/custom/api/config`. Nested paths such as `/tools/closet` and the root prefix `/` are also supported.
 
-## Compatibility and limitations
+## Development
 
-The plugin registers its own sidebar rows, hides the original rows for grouped entries, and redirects clicks to the original panels. It depends on the host’s current sidebar DOM, icons, and labels.
+Run the regression suite from the plugin directory:
 
-- **The plugin UI is still in Chinese.** Excluding official English sidebar entries was verified in the Windows environment listed below; this does not mean full English or multilingual localization.
-- Entries are identified by their displayed labels. Entries with identical labels cannot be reliably distinguished. Renaming an entry or changing the host language may require reassigning it. Groups themselves use separate IDs and can share the same name.
-- Menu entries and entries identified as official rows, including some third-party entries using the host’s default icon, are excluded from grouping.
-- Changes to the host sidebar may require a compatibility update.
+```sh
+npm test
+```
 
-## Validation
-
-- All 23 Node regression tests passed. Run `npm test`. The full check used in the release environment was `node --test --test-isolation=none tests/*.test.mjs`.
-- The runtime code matches the Windows-tested 0.1.3 build r2; version 0.1.4 updates the release version and documentation. The reported environment was Windows 11 Pro 10.0.26300 x64 with DSH Desktop 0.2.2-rc.1.
-- The Windows report covers official-entry exclusion in Chinese and English, an English cold start, multiple groups, plugin enable/disable behavior, configuration saving, retries, and recovery.
-
-See the [Windows validation notes](WINDOWS-VALIDATION.md) (Chinese) for the tested scope and file fingerprints.
-
-## Files
-
-- `lib/index.js`: host-side configuration storage and the same-origin JSON endpoint.
-- `lib/ui.js`: sidebar entries and settings UI.
-- `lib/client.js`: empty implementation.
-- `tests/`: regression tests for configuration, save ordering, route prefixes, dynamic entries, Esc cancellation, and official-entry detection.
+The release passed 23 regression tests. Tested environments and runtime fingerprints are documented in the [Windows validation notes](WINDOWS-VALIDATION.md).
 
 ## License
 
