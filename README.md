@@ -1,46 +1,51 @@
-# 匣（dsh-closet）
+# dsh-closet — 匣
 
-把 DeepSeek Harness 侧栏里零碎的第三方插件入口，收进可折叠的小盒子。
+**English** | [简体中文](README.zh.md)
 
-**当前发布：0.1.4。** [下载与更新说明](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4)。运行代码沿用 Windows 已复测的 0.1.3 build r2。
+Organize third-party entries in the DeepSeek Harness sidebar into collapsible groups.
 
-![多个匣按需展开或收起，入口仍打开原插件面板](docs/images/sidebar-overview.png)
+**Latest release: 0.1.4.** [Download and release notes](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4).
 
-![在设置中创建匣、改名排序，并用下拉框分配入口](docs/images/settings-assignment.png)
+![Expand or collapse groups while keeping access to the original plugin panels](docs/images/sidebar-overview.png)
 
-图中以「常用」「开发」「工具」三个匣为例，展示侧栏收纳和入口归属的设置方式。
+![Create groups, rename and reorder them, and assign entries through dropdowns](docs/images/settings-assignment.png)
 
-## 它做什么
+These feature illustrations use Chinese UI labels. The example groups are 常用 (Everyday), 开发 (Development), and 工具 (Tools).
 
-- 创建多个匣，各自独立展开、收起；匣头显示当前可用入口数量。
-- 点击匣内入口打开原插件面板，当前入口高亮，收起后保留活动标记。
-- 收纳后的原始入口不再重复占位，插件本身继续工作。
-- 第三方插件停用后，代理入口和数量跟随实际侧栏变化；重新启用时恢复原归属。
-- 官方入口不参与收纳。0.1.4 修复了英文界面下官方入口误识别。
+## Features
 
-## 怎么配置
+- Create multiple groups and expand or collapse each one independently. Group headers show the number of currently available entries.
+- Open the original plugin panel from a grouped entry. The active entry is highlighted, with an activity indicator when its group is collapsed.
+- Keep grouped entries from appearing twice in the sidebar. The underlying plugins continue to work.
+- Follow sidebar changes when a third-party plugin is disabled or enabled. Entries return to their saved groups when they become available again.
+- Exclude official sidebar entries from the assignment list. Version 0.1.4 fixes their incorrect detection in the English host interface.
 
-装好后打开 **设置 → 匣**：
+## Installation and upgrades
 
-- 新建、改名、排序、删除匣；删除时成员回到匣外。
-- 通过每个入口右侧的下拉框选择归属，也可放回匣外。
-- 新入口默认在匣外，按需分配。
+Download a ZIP or TGZ from the [release page](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4). The download links are in the release description.
 
-改动立即反映在界面上，并串行保存到本机 `<DSH_HOME>/config/dsh-closet.json`（默认 `~/.dsh/config/dsh-closet.json`）。保存期间合并等待中的编辑；保存失败保留当前编辑并提供重试。刷新后重新读取落盘配置。
+- **ZIP:** extract the archive and install its `dsh-closet` directory as a local DSH bundle.
+- **TGZ:** install the archive through the plugin manager for your DSH environment.
 
-只有配置文件不存在时才创建默认配置。权限、占用等读取失败会报错并支持重试，不移动或重写原文件。无效 JSON 先成功备份再重建，已有 `.broken` 保留，后续使用 `.broken.1` 等名称。备份失败时保留原文件并报错。
+For Windows Desktop, use its bundled CLI or the plugin manager available in your installed version, and select the `desktop` profile. Executable paths depend on your installation. Fully restart DSH when required by the host.
 
-## 安装与升级
+Back up `<DSH_HOME>/config/dsh-closet.json` before upgrading. The configuration format remains version 1, so existing valid configurations need no migration. If an older version assigned official entries to a group, move them outside the group before upgrading. This release does not automatically remove existing records.
 
-在 [Release](https://github.com/SamLeRiddle/dsh-closet/releases/tag/v0.1.4) 下载 ZIP 或 TGZ：ZIP 解压后安装其中的 `dsh-closet` 目录；TGZ 交给对应 DSH 环境的插件管理器安装。
+## Configuration
 
-Windows Desktop 使用其自带的 CLI 或实际版本提供的插件管理器，并选择 desktop profile。安装后按宿主要求完整重启 DSH。安装器的实际位置以本机为准。
+Open DSH settings and select **匣**. The plugin settings interface is currently in Chinese.
 
-升级前备份配置。配置格式仍为版本 1，无需迁移已有有效配置。如果旧版曾误收官方入口，先在设置里放回匣外；本版不自动清理已有记录。
+- Create, rename, reorder, or delete groups. Deleting a group returns its members to the ungrouped sidebar.
+- Use the dropdown beside each entry to assign it to a group or return it to the ungrouped sidebar.
+- Newly discovered entries start outside all groups.
 
-## 接口前缀
+Changes appear immediately and are saved locally to `<DSH_HOME>/config/dsh-closet.json`, defaulting to `~/.dsh/config/dsh-closet.json`. Saves run in sequence, and pending edits are combined into the latest configuration. Failed saves keep your current edits and offer a retry. Refreshing the page reloads the configuration from disk.
 
-默认前缀为 `/closet`。可在 profile 的 `cordis.patch.yml` 覆盖配置：
+A default configuration is created only when the file is missing. Temporary read failures, including permission or file-access errors, are reported without moving or overwriting the original file. Invalid JSON is backed up before rebuilding the configuration. Existing `.broken` backups are kept, with later backups named `.broken.1` and so on. If the backup fails, the original file is preserved and the error is reported.
+
+## API route prefix
+
+The default prefix is `/closet`. Override it in your profile’s `cordis.patch.yml`:
 
 ```yaml
 - id: closet
@@ -48,30 +53,32 @@ Windows Desktop 使用其自带的 CLI 或实际版本提供的插件管理器�
     routePrefix: /custom
 ```
 
-重启 DSH 后刷新页面，Host 与界面会使用同一配置接口，此例为 `/custom/api/config`。也支持 `/tools/closet` 等多级路径及 `/`（对应 `/api/config`）。
+Restart DSH and refresh the page. Both the host and the client then use the same endpoint: `/custom/api/config` in this example. Nested paths such as `/tools/closet` are supported, as is `/`, which maps to `/api/config`.
 
-## 兼容范围与实现限制
+## Compatibility and limitations
 
-插件没有使用官方分组接口：它注册自己的侧栏行，隐藏已收纳的原行，点击代理行时打开原面板，因此依赖宿主当前 DOM、图标和标签结构。
+The plugin registers its own sidebar rows, hides the original rows for grouped entries, and redirects clicks to the original panels. It depends on the host’s current sidebar DOM, icons, and labels.
 
-- 插件界面目前仍为中文。英文官方行排除已在所列 Windows 环境验证，不代表已完成所有语言本地化。
-- 入口按显示标签识别，同名入口不能可靠区分；入口改名或切换语言后，原归属可能需要重新分配。同名匣本身仍按各自 ID 区分。
-- 菜单入口及使用宿主默认图标等被识别为官方行的入口，暂不参与收纳。
-- 宿主更改侧栏结构后可能需要适配。
+- **The plugin UI is still in Chinese.** Excluding official English sidebar entries was verified in the Windows environment listed below; this does not mean full English or multilingual localization.
+- Entries are identified by their displayed labels. Entries with identical labels cannot be reliably distinguished. Renaming an entry or changing the host language may require reassigning it. Groups themselves use separate IDs and can share the same name.
+- Menu entries and entries identified as official rows, including some third-party entries using the host’s default icon, are excluded from grouping.
+- Changes to the host sidebar may require a compatibility update.
 
-## 验证记录
+## Validation
 
-- 23 项 Node 回归通过；运行 `npm test`。本次云端完整用例检查命令为 `node --test --test-isolation=none tests/*.test.mjs`。
-- 运行代码与 Windows 已测的 0.1.3 build r2 一致，仅统一发布版本及文档。报告环境为 Windows 11 专业版 10.0.26300 x64、DSH Desktop 0.2.2-rc.1。
-- Windows 报告覆盖中英文官方行排除、英文冷启动、多匣、动态启停和配置保存恢复；验证范围及指纹见 [Windows 验证摘要](WINDOWS-VALIDATION.md)。
+- All 23 Node regression tests passed. Run `npm test`. The full check used in the release environment was `node --test --test-isolation=none tests/*.test.mjs`.
+- The runtime code matches the Windows-tested 0.1.3 build r2; version 0.1.4 updates the release version and documentation. The reported environment was Windows 11 Pro 10.0.26300 x64 with DSH Desktop 0.2.2-rc.1.
+- The Windows report covers official-entry exclusion in Chinese and English, an English cold start, multiple groups, plugin enable/disable behavior, configuration saving, retries, and recovery.
 
-## 文件
+See the [Windows validation notes](WINDOWS-VALIDATION.md) (Chinese) for the tested scope and file fingerprints.
 
-- `lib/index.js`：Host 配置读写与同源 JSON 接口。
-- `lib/ui.js`：侧栏和设置界面。
-- `lib/client.js`：空实现。
-- `tests/`：配置、保存队列、前缀、动态入口、Esc 和官方行识别的回归测试。
+## Files
 
-## 许可
+- `lib/index.js`: host-side configuration storage and the same-origin JSON endpoint.
+- `lib/ui.js`: sidebar entries and settings UI.
+- `lib/client.js`: empty implementation.
+- `tests/`: regression tests for configuration, save ordering, route prefixes, dynamic entries, Esc cancellation, and official-entry detection.
+
+## License
 
 [MIT](LICENSE)
