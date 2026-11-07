@@ -1,0 +1,3 @@
+378df54dfe750ff0dea50ee49d1615f03b10c793e37dbe8c219def2e07e939da  dsh-closet-0.1.4.zip
+5c2bf518ae5297fff951264b07a22441f6ccaff7a3e82b49b57784c80743c345  dsh-closet-0.1.4.tgz
+a842c92ef8bd3f239830ab408c1c78bcca51efa7dca3aaa0cdd7476905b2c7da  WINDOWS-VALIDATION-0.1.4.md
