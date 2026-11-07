@@ -1,6 +1,6 @@
 {
   "name": "dsh-closet",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Collect the scattered third-party plugin entries in the sidebar footer into one collapsible row named 匣.",
   "type": "module",
   "license": "MIT",
@@ -26,9 +26,10 @@
     "locale/zh.json",
     "icon.svg",
     "README.md",
-    "CHANGELOG.md",
     "docs/images/*.png",
-    "tests/*.test.mjs"
+    "tests/*.test.mjs",
+    "CHANGELOG.md",
+    "WINDOWS-VALIDATION.md"
   ],
   "keywords": [
     "dsh",

@@ -42,11 +42,21 @@ function startUI({ baseURI = 'http://dsh.test/', clientConfig, rows = [] } = {})
     },
     useEffect() {},
   }
-  const sidebarRow = label => ({
-    getAttribute(name) { return name === 'aria-label' ? label : null },
-    querySelector() { return null },
-    click() {},
-  })
+  // rows 里的每一项可以是字符串（普通第三方入口），也可以是
+  // { label, hostIcon: true }（宿主行：图标是宿主自己的 svg）
+  // 或 { label, menu: true }（菜单入口，带 aria-haspopup）。
+  const sidebarRow = row => {
+    const spec = typeof row === 'string' ? { label: row } : row
+    return {
+      getAttribute(name) { return name === 'aria-label' ? spec.label : null },
+      hasAttribute(name) { return name === 'aria-haspopup' ? !!spec.menu : false },
+      querySelector(selector) {
+        if (selector === '[data-slot] > svg[data-icon]') return spec.hostIcon ? { tagName: 'svg' } : null
+        return null
+      },
+      click() {},
+    }
+  }
   const document = {
     baseURI,
     documentElement: { setAttribute(name, value) { attrs[name] = value } },
@@ -287,6 +297,51 @@ test('keeps every configured member while the sidebar has not rendered yet', asy
   })
   await settle()
   assert.equal(ui.childCount(), 2, 'An empty sidebar is not evidence that the plugins disappeared')
+})
+
+test('recognises host entries by their structure, not by Chinese labels', async () => {
+  const ui = startUI({
+    rows: [
+      { label: 'Plugins', hostIcon: true },
+      { label: 'Automation tasks', hostIcon: true },
+      { label: 'More', menu: true },
+      '测试便签',
+    ],
+  })
+  ui.requests[0].respond({
+    ok: true,
+    config: { version: 1, closets: [{ id: 'c1', name: 'closet', open: true }], entries: { Plugins: 'c1', 测试便签: 'c1' } },
+    path: '/test/config/dsh-closet.json',
+  })
+  await settle()
+  assert.equal(ui.childCount(), 1, 'Only the third-party entry may be moved into a closet')
+  assert.match(textOf(ui.settings()), /侧栏里没找到/, 'The stale host entry is reported instead of silently kept')
+})
+
+test('leaves menu entries alone even when their label looks movable', async () => {
+  const ui = startUI({ rows: [{ label: '我的面板', menu: true }] })
+  ui.requests[0].respond({
+    ok: true,
+    config: { version: 1, closets: [{ id: 'c1', name: '匣', open: true }], entries: {} },
+    path: '/test/config/dsh-closet.json',
+  })
+  await settle()
+  assert.doesNotMatch(textOf(ui.settings()), /我的面板/, 'A menu entry must never be listed as a movable entry')
+})
+
+test('still treats Chinese host entries as official', async () => {
+  const ui = startUI({ rows: ['插件', '自动化任务', '更多', '便签'] })
+  ui.requests[0].respond({
+    ok: true,
+    config: { version: 1, closets: [{ id: 'c1', name: '匣', open: true }], entries: {} },
+    path: '/test/config/dsh-closet.json',
+  })
+  await settle()
+  const text = textOf(ui.settings())
+  assert.match(text, /便签/, 'The third-party entry is listed')
+  // 说明文字里本来就会提到「插件、自动化任务、更多」，所以只认“入口行”的形态：标签后面紧跟放置下拉框
+  assert.doesNotMatch(text, /自动化任务\n/, 'Chinese host entries stay out of the movable list')
+  assert.doesNotMatch(text, /插件\n/, 'Chinese host entries stay out of the movable list')
 })
 
 test('Escape cancels an edited name before blur can save it, and later edits still save', async () => {
